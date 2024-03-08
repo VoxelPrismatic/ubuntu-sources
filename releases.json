@@ -2,7 +2,7 @@
     "4.10":     ["warty",       false],
     "5.04":     ["hoary",       false],
     "5.10":     ["breezy",      false],
-    "6.06":     ["dapper",      true],
+    "6.04":     ["dapper",      true],
     "6.10":     ["edgy",        false],
     "7.04":     ["feisty",      false],
     "7.10":     ["gutsy",       false],
