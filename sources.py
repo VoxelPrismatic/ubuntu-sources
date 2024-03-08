@@ -4,7 +4,6 @@ import sys
 import json
 import argparse
 import requests
-import itertools
 
 parser = argparse.ArgumentParser(
     prog = "Ubuntu Sourcer",
@@ -68,7 +67,7 @@ if args.version in RELEASES:
     current_data["VERSION_ID"] = args.version
 elif args.version:
     for ver in RELEASES:
-        valid = RELEASES[ver].lower().split() + RELEASES[ver].lower()
+        valid = RELEASES[ver].lower().split() + [RELEASES[ver].lower()]
         if args.version.lower() in valid:
             current_data["VERSION_ID"] = ver
             break
@@ -110,7 +109,7 @@ ARCHIVE_COMPONENTS = [
 
 def validate_uri(name, path, domain, component):
     uri = f"http://{domain}ubuntu.com/ubuntu/dists/{name}/{component}/"
-    breakdown = f"\x1b[94;1m{name}{path}\x1b[0m \x1b[93;1m{domain[:-1]} \x1b[95;1m{component}\x1b[0m"
+    breakdown = f"\x1b[93;1m{domain[:-1]} \x1b[94;1m{name}{path} \x1b[95;1m{component}\x1b[0m"
     if PIPING_OUT:
         print(f"\x1b[K~ | " + breakdown + "\r", end = "", file = PIPING_OUT)
 
@@ -144,8 +143,8 @@ depth = str(len(ARCHIVE_COMPONENTS) + 1)
 
 for version in dist_years:
     code_name = RELEASES[version]
-    sources += f"# {version} - {code_name}"
     build_name = code_name.split()[0].lower()
+    ver_urls = []
     for path in ARCHIVE_PATHS:
         path_urls = []
         for domain in ARCHIVE_DOMAINS:
@@ -158,10 +157,14 @@ for version in dist_years:
                     components.append(component)
             if components:
                 path_urls.append(f"http://{domain}ubuntu.com/ubuntu/ {build_name}{path} {' '.join(components)}")
-        sources += "\ndeb " + "\ndeb ".join(path_urls)
-        sources += "\ndeb-src " + "\ndeb-src ".join(path_urls)
-        sources += "\n"
-    sources += "\n\n\n\n"
+        ver_urls.append(path_urls)
+    if sum(len(q) for q in ver_urls):
+        sources += f"# {version} - {code_name}"
+        for path_urls in ver_urls:
+            sources += "\ndeb " + "\ndeb ".join(path_urls)
+            sources += "\ndeb-src " + "\ndeb-src ".join(path_urls)
+            sources += "\n"
+        sources += "\n\n\n\n"
 
 if args.output and os.access(args.output, os.W_OK):
     open(args.output, "w+").write(sources)
